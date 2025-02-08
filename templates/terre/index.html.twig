@@ -1,0 +1,195 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Terre index{% endblock %}
+
+{% block body %}
+    <style>
+        table {
+        width: 800px;
+        border-collapse: collapse;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        th,
+td {
+	padding: 15px;
+	background-color: rgba(255,255,255,0.2);
+	color: #000;
+}
+
+th {
+	text-align: left;
+}
+
+thead {
+	th {
+		background-color:rgba(12, 58, 14, 0.5);
+	}
+}
+
+tbody {
+	tr {
+		&:hover {
+			background-color: rgba(4, 83, 45, 0.3);
+		}
+	}
+	td {
+		position: relative;
+		&:hover {
+			&:before {
+				content: "";
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: -9999px;
+				bottom: -9999px;
+				background-color: rgba(255,255,255,0.2);
+				z-index: -1;
+			}
+		}
+	}
+}
+        #map {
+            height: 600px; /* Ajustez la hauteur selon vos besoins */
+            width: 100%;
+            margin-padding_bottom: 10%;
+        }
+    </style>
+
+    <h1>Vos Trres</h1>
+
+    <div class="container">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Nom</th>
+                        <th>Gouvernorat</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Superficie</th>
+                        <th>actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for terre in terres %}
+                    <tr>
+                        <td>{{ terre.id }}</td>
+                        <td>{{ terre.nom }}</td>
+                        <td>{{ terre.gouvernorat }}</td>
+                        <td>{{ terre.latitude }}</td>
+                        <td>{{ terre.longitude }}</td>
+                        <td>{{ terre.superficie }}</td>
+                        <td>
+                            <a href="{{ path('app_terre_show', {'id': terre.id}) }}">show</a>
+                            <a href="{{ path('app_terre_edit', {'id': terre.id}) }}">edit</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">no records found</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <a href="{{ path('app_terre_new') }}">Create new</a>
+        </div>
+
+        <div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Ajoutez la bibliothèque Leaflet pour la carte -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script>
+        // Initialisation de la carte
+        var map = L.map('map').setView([36.8, 10.2], 7); // Centrez la carte sur la Tunisie par défaut
+
+        // Ajoutez une couche de tuiles (par exemple, OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Ajoutez des marqueurs pour chaque terre existante
+        {% for terre in terres %}
+            L.marker([{{ terre.latitude }}, {{ terre.longitude }}]).addTo(map)
+                .bindPopup("<b>{{ terre.nom }}</b><br>{{ terre.gouvernorat }}");
+        {% endfor %}
+
+        // Gestion du clic sur la carte
+        map.on('click', function(e) {
+            // Récupérer les coordonnées du clic
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            // Créer le formulaire HTML pour la popup
+            var popupContent = `
+                <h3>Ajouter une nouvelle terre</h3>
+                <form id="terre-form">
+                    <input type="hidden" id="latitude" name="latitude" value="${lat}" required>
+                    <input type="hidden" id="longitude" name="longitude" value="${lng}" required>
+                    <div>
+                        <label for="nom">Nom de la terre :</label>
+                        <input type="text" id="nom" name="nom" required>
+                    </div>
+                    <div>
+                        <label for="gouvernorat">Gouvernorat :</label>
+                        <input type="text" id="gouvernorat" name="gouvernorat" required>
+                    </div>
+                    <div>
+                        <label for="superficie">Superficie :</label>
+                        <input type="number" id="superficie" name="superficie" step="0.01" required>
+                    </div>
+                    <button type="submit">Enregistrer</button>
+                </form>
+            `;
+
+            // Ouvrir une popup avec le formulaire
+            var popup = L.popup()
+                .setLatLng(e.latlng)
+                .setContent(popupContent)
+                .openOn(map);
+
+            // Gérer la soumission du formulaire
+            document.getElementById('terre-form').addEventListener('submit', function(e) {
+                e.preventDefault(); // Empêcher la soumission par défaut
+
+                // Récupérer les données du formulaire
+                var formData = {
+                    nom: document.getElementById('nom').value,
+                    gouvernorat: document.getElementById('gouvernorat').value,
+                    superficie: parseFloat(document.getElementById('superficie').value),
+                    latitude: parseFloat(document.getElementById('latitude').value),
+                    longitude: parseFloat(document.getElementById('longitude').value),
+                };
+
+                // Envoyer les données via AJAX
+                fetch('{{ path('app_terre_new_from_map') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Afficher un message de succès
+                        window.location.reload(); // Recharger la page pour afficher la nouvelle terre
+                    } else {
+                        alert('Erreur lors de l\'ajout de la terre.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
+            });
+        });
+    </script>
+{% endblock %}

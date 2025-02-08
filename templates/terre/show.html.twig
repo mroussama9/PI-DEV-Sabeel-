@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Terre{% endblock %}
+
+{% block body %}
+    <h1>Terre</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ terre.id }}</td>
+            </tr>
+            <tr>
+                <th>Nom</th>
+                <td>{{ terre.nom }}</td>
+            </tr>
+            <tr>
+                <th>Gouvernorat</th>
+                <td>{{ terre.gouvernorat }}</td>
+            </tr>
+            <tr>
+                <th>Latitude</th>
+                <td>{{ terre.latitude }}</td>
+            </tr>
+            <tr>
+                <th>Longitude</th>
+                <td>{{ terre.longitude }}</td>
+            </tr>
+            <tr>
+                <th>Superficie</th>
+                <td>{{ terre.superficie }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_terre_index') }}">back to list</a>
+
+    <a href="{{ path('app_terre_edit', {'id': terre.id}) }}">edit</a>
+
+    {{ include('terre/_delete_form.html.twig') }}
+{% endblock %}
