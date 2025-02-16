@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Capteurs{% endblock %}
+
+{% block body %}
+    <h1>Liste des Capteurs</h1>
+    <a href="{{ path('capteur_new') }}" class="btn btn-success mb-3">Ajouter un Capteur</a>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Valeur</th>
+                <th>Topic</th>
+                <th>Parcelle</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for capteur in capteurs %}
+                <tr>
+                    <td>{{ capteur.id }}</td>
+                    <td>{{ capteur.nom }}</td>
+                    <td>{{ capteur.type }}</td>
+                    <td>{{ capteur.valeur }}</td>
+                    <td>{{ capteur.topic }}</td>
+                    <td>{{ capteur.parcelle.nom }}</td>
+                    <td>
+                        <a href="{{ path('capteur_edit', {id: capteur.id}) }}" class="btn btn-primary">Modifier</a>
+                        <form action="{{ path('capteur_delete', {id: capteur.id}) }}" method="post" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ capteur.id) }}">
+                            <button type="submit" class="btn btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

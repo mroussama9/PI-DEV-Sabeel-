@@ -1,5 +1,5 @@
 <?php
-// src/Entity/Terre.php
+
 namespace App\Entity;
 
 use App\Repository\TerreRepository;
@@ -21,17 +21,17 @@ class Terre
     #[ORM\Column(length: 255)]
     private ?string $gouvernorat = null;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 7)]
-    private ?float $latitude = null;
+    #[ORM\Column(length: 255)]
+    private ?string $latitude = null;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 7)]
-    private ?float $longitude = null;
+    #[ORM\Column(length: 255)]
+    private ?string $longitude = null;
 
     #[ORM\Column(type: 'float')]
     private ?float $superficie = null;
 
-    #[ORM\OneToMany(mappedBy: 'terre', targetEntity: Parcelle::class, orphanRemoval: true)]
-    private Collection $parcelles;
+    #[ORM\OneToMany(mappedBy: 'terre', targetEntity: Parcelle::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $parcelles; // ✅ Relation corrigée avec cascade persist & remove
 
     public function __construct()
     {
@@ -45,16 +45,22 @@ class Terre
     public function getGouvernorat(): ?string { return $this->gouvernorat; }
     public function setGouvernorat(string $gouvernorat): self { $this->gouvernorat = $gouvernorat; return $this; }
 
-    public function getLatitude(): ?float { return $this->latitude; }
-    public function setLatitude(float $latitude): self { $this->latitude = $latitude; return $this; }
+    public function getLatitude(): ?string { return $this->latitude; }
+    public function setLatitude(string $latitude): self { $this->latitude = $latitude; return $this; }
 
-    public function getLongitude(): ?float { return $this->longitude; }
-    public function setLongitude(float $longitude): self { $this->longitude = $longitude; return $this; }
+    public function getLongitude(): ?string { return $this->longitude; }
+    public function setLongitude(string $longitude): self { $this->longitude = $longitude; return $this; }
 
     public function getSuperficie(): ?float { return $this->superficie; }
     public function setSuperficie(float $superficie): self { $this->superficie = $superficie; return $this; }
 
-    public function getParcelles(): Collection { return $this->parcelles; }
+    /**
+     * @return Collection<int, Parcelle>
+     */
+    public function getParcelles(): Collection
+    {
+        return $this->parcelles;
+    }
 
     public function addParcelle(Parcelle $parcelle): self
     {

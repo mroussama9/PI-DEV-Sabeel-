@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Parcelle{% endblock %}
+
+{% block body %}
+    <h1>Modifier la Parcelle</h1>
+
+    <!-- Formulaire de modification -->
+    <div id="parcelle-form-container">
+        {{ form_start(parcelleForm, {'attr': {'id': 'edit-parcelle-form'}}) }}
+            {{ form_row(parcelleForm.nom) }}
+            {{ form_row(parcelleForm.superficie) }}
+            {{ form_row(parcelleForm.typeCulture) }}
+            {{ form_row(parcelleForm.nombreCapteurs) }}
+            
+            <!-- Bouton pour soumettre le formulaire -->
+            <button type="submit" class="btn btn-primary mt-3">Mettre à jour</button>
+        {{ form_end(parcelleForm) }}
+
+        <!-- Lien pour aller directement à la page d'ajout des capteurs -->
+        <a href="{{ path('app_capteur_new_list', {id: parcelle.id}) }}" class="btn btn-info mt-3">Ajouter des capteurs</a>
+    </div>
+
+
+    <a href="{{ path('app_parcelle_show', { id: parcelle.id }) }}" class="btn btn-secondary mt-3">Retour</a>
+
+    <!-- 🔥 Script pour gérer la redirection AJAX -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.querySelector("#edit-parcelle-form");
+
+        form.addEventListener("submit", function(event) {
+            event.preventDefault(); // Empêcher la soumission normale
+
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest' // 🔥 Permet à Symfony de reconnaître la requête AJAX
+                }
+            })
+            .then(response => response.json()) // 🔥 Vérifier que la réponse est bien JSON
+            .then(data => {
+                if (data.success) {
+                    console.log("Redirection vers:", data.redirect);
+                    window.location.href = data.redirect; // 🔥 Rediriger vers la page d'ajout des capteurs
+                } else {
+                    alert("Erreur: " + (data.message || "Impossible de mettre à jour la parcelle."));
+                }
+            })
+            .catch(error => {
+                console.error("Erreur AJAX:", error);
+                alert("Une erreur s'est produite. Vérifiez la console.");
+            });
+        });
+    });
+</script>
+
+{% endblock %}

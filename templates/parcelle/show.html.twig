@@ -1,0 +1,133 @@
+{# templates/parcelle/show.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Fermes{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <header class="text-center mb-4 p-3 rounded bg-success text-white">
+            <h1><i class="bi bi-tree"></i> Gestion des Parcelles</h1>
+        </header>
+
+        <!-- Affichage des détails de la parcelle -->
+        <div class="card shadow-lg p-4 mb-4">
+            <h3 class="text-center text-success"><i class="bi bi-info-circle"></i> Détails de la Parcelle</h3>
+            <table class="table table-bordered mt-3">
+                <tbody>
+                    <tr><th>Id</th><td>{{ parcelle.id }}</td></tr>
+                    <tr><th>Nom</th><td>{{ parcelle.nom }}</td></tr>
+                    <tr><th>Superficie</th><td>{{ parcelle.superficie }} ha</td></tr>
+                    <tr><th>Type de culture</th><td>{{ parcelle.typeCulture }}</td></tr>
+                    <tr><th>Nombre de capteurs</th><td>{{ parcelle.getNombreCapteurs() }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Sections Drag & Drop -->
+        <div class="row">
+            <!-- Section Plantée -->
+            <div class="col-md-6">
+                <h4 class="text-success text-center"><i class="bi bi-flower1"></i> 🌱 Plantée</h4>
+                <div id="planted" class="dropzone p-4 border border-success bg-light rounded" 
+                     ondragover="allowDrop(event)" ondrop="drop(event, 'planted')">
+                    {% if parcelle.plantee %}
+                        <div class="parcelle card p-2 m-2 text-white bg-success shadow" 
+                             draggable="true" ondragstart="drag(event)" id="parcelle-{{ parcelle.id }}">
+                            <strong>{{ parcelle.nom }}</strong> <br>
+                            Superficie: {{ parcelle.superficie }} ha
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Section Non Plantée -->
+            <div class="col-md-6">
+                <h4 class="text-danger text-center"><i class="bi bi-cloud-drizzle"></i> 🌾 Non Plantée</h4>
+                <div id="not-planted" class="dropzone p-4 border border-danger bg-light rounded"
+                     ondragover="allowDrop(event)" ondrop="drop(event, 'not-planted')">
+                    {% if not parcelle.plantee %}
+                        <div class="parcelle card p-2 m-2 text-white bg-danger shadow"
+                             draggable="true" ondragstart="drag(event)" id="parcelle-{{ parcelle.id }}">
+                            <strong>{{ parcelle.nom }}</strong> <br>
+                            Superficie: {{ parcelle.superficie }} ha
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE POUR LE FORMULAIRE -->
+    <div class="modal fade" id="editParcelleModal" tabindex="-1" aria-labelledby="editParcelleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="editParcelleModalLabel"><i class="bi bi-pencil-square"></i> Modifier la Parcelle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    {{ form_start(parcelleForm) }}
+                        {{ form_widget(parcelleForm) }}
+                        <button type="submit" class="btn btn-success w-100">Mettre à jour</button>
+                    {{ form_end(parcelleForm) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drag(event) {
+            event.dataTransfer.setData("text", event.target.id);
+        }
+
+        function drop(event, targetZone) {
+            event.preventDefault();
+            let parcelleId = event.dataTransfer.getData("text").replace('parcelle-', '');
+            let parcelle = document.getElementById("parcelle-" + parcelleId);
+
+            if (!parcelle) {
+                console.error("Erreur : L'élément déplacé n'a pas été trouvé.");
+                return;
+            }
+
+            let url = targetZone === "planted" 
+                ? `/parcelle/update-status/${parcelleId}/planted` 
+                : `/parcelle/update-status/${parcelleId}/not-planted`;
+
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log("Mise à jour réussie : Plantee =", data.plantee);
+
+                    document.getElementById(targetZone).appendChild(parcelle);
+
+                    if (targetZone === "planted") {
+                        parcelle.classList.remove("bg-danger");
+                        parcelle.classList.add("bg-success");
+                        var myModal = new bootstrap.Modal(document.getElementById("editParcelleModal"));
+                        myModal.show();
+                    } else {
+                        parcelle.classList.remove("bg-success");
+                        parcelle.classList.add("bg-danger");
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Erreur lors de la requête AJAX :", error);
+            });
+        }
+    </script>
+
+    <!-- Import Bootstrap et Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

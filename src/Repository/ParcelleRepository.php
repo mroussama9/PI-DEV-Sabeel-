@@ -16,6 +16,15 @@ class ParcelleRepository extends ServiceEntityRepository
         parent::__construct($registry, Parcelle::class);
     }
 
+    public function findAllParcelles()
+    {
+        return $this->createQueryBuilder('p')
+            ->orderBy('p.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
     //    /**
     //     * @return Parcelle[] Returns an array of Parcelle objects
     //     */

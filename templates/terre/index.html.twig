@@ -1,103 +1,219 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}Terre index{% endblock %}
-
 {% block body %}
-    <style>
-        table {
-        width: 800px;
-        border-collapse: collapse;
-        overflow: hidden;
-        box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
 
-        th,
-td {
-	padding: 15px;
-	background-color: rgba(255,255,255,0.2);
-	color: #000;
+    <style>
+        /* Style général */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color:rgb(2, 139, 11);
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* Conteneur principal */
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding: 20px;
+    max-width: 100%;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Style du tableau */
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
 }
 
 th {
-	text-align: left;
+    background-color:rgb(0, 98, 46);
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
 }
 
-thead {
-	th {
-		background-color:rgba(12, 58, 14, 0.5);
-	}
+td {
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
 }
 
-tbody {
-	tr {
-		&:hover {
-			background-color: rgba(4, 83, 45, 0.3);
-		}
-	}
-	td {
-		position: relative;
-		&:hover {
-			&:before {
-				content: "";
-				position: absolute;
-				left: 0;
-				right: 0;
-				top: -9999px;
-				bottom: -9999px;
-				background-color: rgba(255,255,255,0.2);
-				z-index: -1;
-			}
-		}
-	}
+tbody tr:hover {
+    background-color: #e0f7fa;
+    transition: background-color 0.3s ease;
 }
-        #map {
-            height: 600px; /* Ajustez la hauteur selon vos besoins */
-            width: 100%;
-            margin-padding_bottom: 10%;
-        }
+
+/* Style de la carte */
+#map {
+    height: 500px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Style des boutons */
+.btn-outline-success {
+    margin-top: 20px;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-outline-success:hover {
+    background-color: #218838;
+}
+
+/* Barre de recherche et filtres */
+.search-bar, .filters {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-bar label, .filters label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.search-bar input, .filters select, .filters button {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.search-bar input {
+    flex: 1;
+}
+
+.search-bar input:focus, .filters select:focus {
+    border-color:rgb(0, 177, 47);
+}
+
+.filters button {
+    background-color:rgb(2, 120, 22);
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.filters button:hover {
+    background-color:rgb(0, 150, 12);
+}
+
+/* Style des liens dans le tableau */
+table a {
+    color:rgb(16, 161, 5);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+table a:hover {
+    color:rgb(0, 158, 74);
+}
+
+/* Style des messages d'erreur ou d'absence de données */
+tbody tr td[colspan="7"] {
+    text-align: center;
+    color: #e74c3c;
+    font-weight: 500;
+    padding: 20px;
+}
+
     </style>
 
-    <h1>Vos Trres</h1>
+    <h1>Vos Terres</h1>
 
     <div class="container">
+        <!-- Colonne de gauche : Tableau et bouton -->
         <div class="table-container">
+            <div class="search-bar">
+                <label for="search-input">Rechercher :</label>
+                <input type="text" id="search-input" placeholder="Entrez un terme de recherche...">
+            </div>
+
+            <div class="filters">
+                <label for="filter-criteria">Trier par :</label>
+                <select id="filter-criteria">
+                    <option value="nom">Nom</option>
+                    <option value="gouvernorat">Gouvernorat</option>
+                    <option value="superficie">Superficie</option>
+                </select>
+                <button id="sort-asc">Trier par ordre croissant</button>
+                <button id="sort-desc">Trier par ordre décroissant</button>
+            </div>
+
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Id</th>
                         <th>Nom</th>
                         <th>Gouvernorat</th>
                         <th>Latitude</th>
                         <th>Longitude</th>
                         <th>Superficie</th>
-                        <th>actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                {% for terre in terres %}
-                    <tr>
-                        <td>{{ terre.id }}</td>
-                        <td>{{ terre.nom }}</td>
-                        <td>{{ terre.gouvernorat }}</td>
-                        <td>{{ terre.latitude }}</td>
-                        <td>{{ terre.longitude }}</td>
-                        <td>{{ terre.superficie }}</td>
-                        <td>
-                            <a href="{{ path('app_terre_show', {'id': terre.id}) }}">show</a>
-                            <a href="{{ path('app_terre_edit', {'id': terre.id}) }}">edit</a>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="7">no records found</td>
-                    </tr>
-                {% endfor %}
+                    {% for terre in terres %}
+                        <tr>
+                            <td>{{ terre.nom }}</td>
+                            <td>{{ terre.gouvernorat }}</td>
+                            <td>{{ terre.latitude }}</td>
+                            <td>{{ terre.longitude }}</td>
+                            <td>{{ terre.superficie }}</td>
+                            <td>
+                                <a href="{{ path('app_terre_show', {'id': terre.id}) }}">show</a>
+                                <a href="{{ path('app_terre_edit', {'id': terre.id}) }}">edit</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7">Aucun enregistrement trouvé</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-
-            <a href="{{ path('app_terre_new') }}">Create new</a>
         </div>
 
+        <!-- Colonne de droite : Carte -->
         <div>
             <div id="map"></div>
         </div>
@@ -118,8 +234,14 @@ tbody {
 
         // Ajoutez des marqueurs pour chaque terre existante
         {% for terre in terres %}
-            L.marker([{{ terre.latitude }}, {{ terre.longitude }}]).addTo(map)
+            var marker = L.marker([{{ terre.latitude }}, {{ terre.longitude }}]).addTo(map)
                 .bindPopup("<b>{{ terre.nom }}</b><br>{{ terre.gouvernorat }}");
+
+            // Ajouter un événement de clic sur le marqueur
+            marker.on('click', function() {
+                // Rediriger vers la page de détails de la terre
+                window.location.href = "{{ path('app_terre_show', {'id': terre.id}) }}";
+            });
         {% endfor %}
 
         // Gestion du clic sur la carte
@@ -165,8 +287,8 @@ tbody {
                     nom: document.getElementById('nom').value,
                     gouvernorat: document.getElementById('gouvernorat').value,
                     superficie: parseFloat(document.getElementById('superficie').value),
-                    latitude: parseFloat(document.getElementById('latitude').value),
-                    longitude: parseFloat(document.getElementById('longitude').value),
+                    latitude: document.getElementById('latitude').value,
+                    longitude: document.getElementById('longitude').value,
                 };
 
                 // Envoyer les données via AJAX
@@ -191,5 +313,65 @@ tbody {
                 });
             });
         });
+
+
+        // ----------- filres -----------
+        document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.table tbody');
+    const rows = Array.from(table.querySelectorAll('tr'));
+
+    const filterCriteria = document.getElementById('filter-criteria');
+    const sortAscButton = document.getElementById('sort-asc');
+    const sortDescButton = document.getElementById('sort-desc');
+
+    function sortTable(criteria, order = 'asc') {
+        rows.sort((a, b) => {
+            const aValue = a.querySelector(`td:nth-child(${getColumnIndex(criteria)})`).textContent.trim();
+            const bValue = b.querySelector(`td:nth-child(${getColumnIndex(criteria)})`).textContent.trim();
+
+            if (criteria === 'superficie') {
+                return order === 'asc' ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
+            } else {
+                return order === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            }
+        });
+
+        // Réorganiser les lignes dans le tableau
+        rows.forEach(row => table.appendChild(row));
+    }
+
+    function getColumnIndex(criteria) {
+        switch (criteria) {
+            case 'nom': return 1;
+            case 'gouvernorat': return 2;
+            case 'superficie': return 5;
+            default: return 1;
+        }
+    }
+
+    sortAscButton.addEventListener('click', () => sortTable(filterCriteria.value, 'asc'));
+    sortDescButton.addEventListener('click', () => sortTable(filterCriteria.value, 'desc'));
+});
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('.table tbody');
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const searchInput = document.getElementById('search-input');
+
+    // Fonction pour filtrer les lignes du tableau
+    function filterTable(searchTerm) {
+        rows.forEach(row => {
+            const cells = Array.from(row.querySelectorAll('td'));
+            const matches = cells.some(cell => cell.textContent.toLowerCase().includes(searchTerm.toLowerCase()));
+            row.style.display = matches ? '' : 'none'; // Afficher ou masquer la ligne
+        });
+    }
+
+    // Écouteur d'événement pour la barre de recherche
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.trim();
+        filterTable(searchTerm);
+    });
+});
     </script>
 {% endblock %}

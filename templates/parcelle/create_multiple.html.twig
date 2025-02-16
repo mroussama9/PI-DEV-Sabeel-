@@ -1,0 +1,87 @@
+{# templates/parcelle/create_multiple.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Diviser la terre en parcelles{% endblock %}
+
+{% block body %}
+    <h1>Diviser la terre "{{ terre.nom }}" en parcelles</h1>
+
+    {# Affichage des messages d'erreur Symfony (Flash Messages) #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <form method="post" action="{{ path('app_parcelle_create_multiple', {'id': terre.id}) }}">
+        <div class="form-group">
+            <label for="nombreParcelles">Nombre de parcelles</label>
+            <input type="number" class="form-control" id="nombreParcelles" name="nombreParcelles" min="1" required>
+        </div>
+
+        <div id="parcellesContainer"></div>
+
+        <button type="button" class="btn btn-primary mt-3" onclick="afficherFormulairesParcelles()">Générer les champs</button>
+        <button type="submit" class="btn btn-success mt-3">Créer les parcelles</button>
+    </form>
+
+    <a href="{{ path('app_parcelle_index') }}" class="btn btn-secondary mt-3">Retour à la liste</a>
+
+    <script>
+        function afficherFormulairesParcelles() {
+            const nombreParcelles = parseInt(document.getElementById('nombreParcelles').value, 10);
+            const parcellesContainer = document.getElementById('parcellesContainer');
+            parcellesContainer.innerHTML = '';
+
+            if (isNaN(nombreParcelles) || nombreParcelles < 1) {
+                alert("Veuillez entrer un nombre valide de parcelles (minimum 1).");
+                return;
+            }
+
+            for (let i = 1; i <= nombreParcelles; i++) {
+                parcellesContainer.innerHTML += `
+                    <div class="form-group">
+                        <label for="parcelleNom${i}">Nom de la parcelle ${i}</label>
+                        <input type="text" class="form-control" id="parcelleNom${i}" name="parcelleNom${i}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="parcelleSuperficie${i}">Superficie de la parcelle ${i} (ha)</label>
+                        <input type="number" class="form-control superficie-input" id="parcelleSuperficie${i}" name="parcelleSuperficie${i}" step="0.01" min="0.01" required>
+                    </div>
+                `;
+            }
+
+            // Ajouter un bouton pour vérifier la somme des superficies avant soumission
+            parcellesContainer.innerHTML += `
+                <button type="button" class="btn btn-info mt-2" onclick="verifierSuperficie()">Vérifier la superficie totale</button>
+            `;
+        }
+
+        function verifierSuperficie() {
+            const inputs = document.querySelectorAll('.superficie-input');
+            let sommeSuperficies = 0;
+            const superficieTotale = parseFloat("{{ terre.superficie }}");
+
+            inputs.forEach(input => {
+                sommeSuperficies += parseFloat(input.value) || 0;
+            });
+
+            if (sommeSuperficies > superficieTotale) {
+                alert(`Erreur : La somme des superficies des parcelles (${sommeSuperficies} ha) dépasse la superficie totale de la terre (${superficieTotale} ha).`);
+                return false;
+            }
+
+            alert(`La somme des superficies est valide (${sommeSuperficies} ha sur ${superficieTotale} ha).`);
+            return true;
+        }
+
+        // Empêcher l'envoi du formulaire si la superficie totale dépasse la limite
+        document.querySelector("form").addEventListener("submit", function(event) {
+            if (!verifierSuperficie()) {
+                event.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

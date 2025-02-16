@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le Capteur{% endblock %}
+
+{% block body %}
+    <h1>Modifier le Capteur</h1>
+    {{ form_start(capteurForm) }}
+        {{ form_widget(capteurForm) }}
+        <button type="submit" class="btn btn-primary mt-3">Mettre à jour</button>
+    {{ form_end(capteurForm) }}
+{% endblock %}
